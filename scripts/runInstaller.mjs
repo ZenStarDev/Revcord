@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * Revcord, a modification for Discord's desktop app
  * Copyright (c) 2023 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,8 +25,29 @@ import { Readable } from "stream";
 import { finished } from "stream/promises";
 import { fileURLToPath } from "url";
 
-const BASE_URL = "https://github.com/Vencord/Installer/releases/latest/download/";
-const INSTALLER_PATH_DARWIN = "VencordInstaller.app/Contents/MacOS/VencordInstaller";
+const isWindows = process.platform === "win32";
+
+function isElevated() {
+    if (!isWindows) return true;
+    try {
+        execSync("net session", { stdio: "ignore" });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+if (isWindows && !isElevated()) {
+    console.log("Restarting with Administrator privileges...");
+    const scriptPath = fileURLToPath(import.meta.url);
+    const args = process.argv.slice(2).map(a => `"${a.replace(/"/g, '\\"')}"`).join(" ");
+    const cmd = `Start-Process -FilePath 'node' -ArgumentList '${scriptPath} ${args}' -Verb RunAs -Wait`;
+    execSync("powershell.exe", ["-Command", cmd], { stdio: "inherit" });
+    process.exit(0);
+}
+
+const BASE_URL = "https://github.com/Revcord/Installer/releases/latest/download/";
+const INSTALLER_PATH_DARWIN = "RevcordInstaller.app/Contents/MacOS/RevcordInstaller";
 
 const BASE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const FILE_DIR = join(BASE_DIR, "dist", "Installer");
@@ -35,11 +56,11 @@ const ETAG_FILE = join(FILE_DIR, "etag.txt");
 function getFilename() {
     switch (process.platform) {
         case "win32":
-            return "VencordInstallerCli.exe";
+            return "RevcordInstallerCli.exe";
         case "darwin":
-            return "VencordInstaller.MacOS.zip";
+            return "RevcordInstaller.MacOS.zip";
         case "linux":
-            return "VencordInstallerCli-linux";
+            return "RevcordInstallerCli-linux";
         default:
             throw new Error("Unsupported platform: " + process.platform);
     }
@@ -53,61 +74,80 @@ async function ensureBinary() {
 
     const downloadName = join(FILE_DIR, filename);
     const outputFile = process.platform === "darwin"
-        ? join(FILE_DIR, "VencordInstaller")
+        ? join(FILE_DIR, "RevcordInstaller")
         : downloadName;
+
+    const localFallback = process.platform === "win32"
+        ? join(BASE_DIR, "Installer", "RevcordInstallerCli.exe")
+        : null;
 
     const etag = existsSync(outputFile) && existsSync(ETAG_FILE)
         ? readFileSync(ETAG_FILE, "utf-8")
         : null;
 
-    const res = await fetch(BASE_URL + filename, {
-        headers: {
-            "User-Agent": "Vencord (https://github.com/Vendicated/Vencord)",
-            "If-None-Match": etag
+    let downloaded = false;
+
+    try {
+        const res = await fetch(BASE_URL + filename, {
+            headers: {
+                "User-Agent": "Revcord (https://github.com/Revcord/Installer)",
+                "If-None-Match": etag
+            }
+        });
+
+        if (res.status === 304) {
+            console.log("Up to date, not redownloading!");
+            downloaded = true;
+        } else if (res.ok) {
+            writeFileSync(ETAG_FILE, res.headers.get("etag"));
+
+            if (process.platform === "darwin") {
+                console.log("Unzipping...");
+                const zip = new Uint8Array(await res.arrayBuffer());
+
+                const ff = await import("fflate");
+                const bytes = ff.unzipSync(zip, {
+                    filter: f => f.name === INSTALLER_PATH_DARWIN
+                })[INSTALLER_PATH_DARWIN];
+
+                writeFileSync(outputFile, bytes, { mode: 0o755 });
+
+                console.log("Overriding security policy for installer binary (this is required to run it)");
+                console.log("xattr might error, that's okay");
+
+                const logAndRun = cmd => {
+                    console.log("Running", cmd);
+                    try {
+                        execSync(cmd);
+                    } catch { }
+                };
+                logAndRun(`sudo spctl --add '${outputFile}' --label "Revcord Installer"`);
+                logAndRun(`sudo xattr -d com.apple.quarantine '${outputFile}'`);
+            } else {
+                const body = Readable.fromWeb(res.body);
+                await finished(body.pipe(createWriteStream(outputFile, {
+                    mode: 0o755,
+                    autoClose: true
+                })));
+            }
+
+            console.log("Finished downloading!");
+            downloaded = true;
+        } else {
+            console.warn(`Download failed with status ${res.status}, trying local build...`);
         }
-    });
-
-    if (res.status === 304) {
-        console.log("Up to date, not redownloading!");
-        return outputFile;
-    }
-    if (!res.ok)
-        throw new Error(`Failed to download installer: ${res.status} ${res.statusText}`);
-
-    writeFileSync(ETAG_FILE, res.headers.get("etag"));
-
-    if (process.platform === "darwin") {
-        console.log("Unzipping...");
-        const zip = new Uint8Array(await res.arrayBuffer());
-
-        const ff = await import("fflate");
-        const bytes = ff.unzipSync(zip, {
-            filter: f => f.name === INSTALLER_PATH_DARWIN
-        })[INSTALLER_PATH_DARWIN];
-
-        writeFileSync(outputFile, bytes, { mode: 0o755 });
-
-        console.log("Overriding security policy for installer binary (this is required to run it)");
-        console.log("xattr might error, that's okay");
-
-        const logAndRun = cmd => {
-            console.log("Running", cmd);
-            try {
-                execSync(cmd);
-            } catch { }
-        };
-        logAndRun(`sudo spctl --add '${outputFile}' --label "Vencord Installer"`);
-        logAndRun(`sudo xattr -d com.apple.quarantine '${outputFile}'`);
-    } else {
-        // WHY DOES NODE FETCH RETURN A WEB STREAM OH MY GOD
-        const body = Readable.fromWeb(res.body);
-        await finished(body.pipe(createWriteStream(outputFile, {
-            mode: 0o755,
-            autoClose: true
-        })));
+    } catch (e) {
+        console.warn("Download failed:", e.message, "- trying local build...");
     }
 
-    console.log("Finished downloading!");
+    if (!downloaded && localFallback && existsSync(localFallback)) {
+        console.log("Using local installer build:", localFallback);
+        return localFallback;
+    }
+
+    if (!downloaded) {
+        throw new Error(`Failed to download installer and no local build found at ${localFallback || outputFile}`);
+    }
 
     return outputFile;
 }
@@ -126,8 +166,8 @@ try {
         stdio: "inherit",
         env: {
             ...process.env,
-            VENCORD_USER_DATA_DIR: BASE_DIR,
-            VENCORD_DEV_INSTALL: "1"
+            REVCORD_USER_DATA_DIR: BASE_DIR,
+            REVCORD_DEV_INSTALL: "1"
         }
     });
 } catch {

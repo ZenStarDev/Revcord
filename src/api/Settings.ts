@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * Revcord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { createDebouncedSettingsSaver } from "@api/DebouncedSettings";
 import { SettingsStore as SettingsStoreClass } from "@shared/SettingsStore";
 import { Logger } from "@utils/Logger";
 import { mergeDefaults } from "@utils/mergeDefaults";
@@ -123,13 +124,13 @@ const DefaultSettings: Settings = {
 
     cloud: {
         authenticated: false,
-        url: "https://api.vencord.dev/",
+        url: "https://api.revcord.dev/",
         settingsSync: false,
         settingsSyncVersion: 0
     }
 };
 
-const settings = !IS_REPORTER ? VencordNative.settings.get() : {} as Settings;
+const settings = !IS_REPORTER ? RevcordNative.settings.get() : {} as Settings;
 mergeDefaults(settings, DefaultSettings);
 
 export const SettingsStore = new SettingsStoreClass(settings, {
@@ -172,10 +173,21 @@ export const SettingsStore = new SettingsStoreClass(settings, {
 });
 
 if (!IS_REPORTER) {
-    SettingsStore.addGlobalChangeListener((_, path) => {
-        SettingsStore.plain.cloud.settingsSyncVersion = Date.now();
-        VencordNative.settings.set(SettingsStore.plain, path);
+    const saver = createDebouncedSettingsSaver({
+        wait: 800,
+        read: () => SettingsStore.plain,
+        flush: (plain, path) => {
+            plain.cloud.settingsSyncVersion = Date.now();
+            RevcordNative.settings.set(plain, path ?? undefined);
+        }
     });
+
+    SettingsStore.addGlobalChangeListener((_, path) => {
+        saver.schedule(path);
+    });
+
+    // Best-effort flush on unload so nothing is lost
+    window.addEventListener("beforeunload", () => saver.flushNow());
 }
 
 /**

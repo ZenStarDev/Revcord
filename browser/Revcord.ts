@@ -1,5 +1,5 @@
 /*!
- * Vencord, a modification for Discord's desktop app
+ * Revcord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import "./VencordNativeStub";
+import "./RevcordNativeStub";
 
-export * from "../src/Vencord";
+export * from "../src/Revcord";

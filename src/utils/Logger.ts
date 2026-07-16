@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * Revcord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { Loggers, type LogLevel } from "@api/Loggers";
+
 export class Logger {
     /**
      * Returns the console format args for a title with the specified background colour and black text
@@ -29,21 +31,24 @@ export class Logger {
         return ["%c %c %s ", "", `background: ${color}; color: black; font-weight: bold; border-radius: 5px;`, title];
     }
 
-    constructor(public name: string, public color: string = "white") { }
+    constructor(public name: string, public color: string = "white") {
+        Loggers.register(name, this);
+    }
 
-    private _log(level: "log" | "error" | "warn" | "info" | "debug", levelColor: string, args: any[], customFmt = "") {
+    private _log(level: LogLevel, levelColor: string, args: any[], customFmt = "") {
         if (IS_REPORTER && IS_WEB && !IS_VESKTOP) {
-            console[level]("[Vencord]", this.name + ":", ...args);
-            return;
+            console[level]("[Revcord]", this.name + ":", ...args);
+        } else {
+            console[level](
+                `%c Revcord %c %c ${this.name} ${customFmt}`,
+                `background: ${levelColor}; color: black; font-weight: bold; border-radius: 5px;`,
+                "",
+                `background: ${this.color}; color: black; font-weight: bold; border-radius: 5px;`
+                , ...args
+            );
         }
 
-        console[level](
-            `%c Vencord %c %c ${this.name} ${customFmt}`,
-            `background: ${levelColor}; color: black; font-weight: bold; border-radius: 5px;`,
-            "",
-            `background: ${this.color}; color: black; font-weight: bold; border-radius: 5px;`
-            , ...args
-        );
+        Loggers.record(level, this.name, args);
     }
 
     public log(...args: any[]) {

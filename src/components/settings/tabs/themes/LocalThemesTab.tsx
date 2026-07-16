@@ -1,19 +1,16 @@
 /*
- * Vencord, a Discord client mod
+ * Revcord, a Discord client mod
  * Copyright (c) 2025 Vendicated and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { isPluginEnabled } from "@api/PluginManager";
 import { Settings, useSettings } from "@api/Settings";
 import { Card } from "@components/Card";
 import { Flex } from "@components/Flex";
-import { FolderIcon, PaintbrushIcon, PencilIcon, PlusIcon, RestartIcon } from "@components/Icons";
+import { FolderIcon, PaintbrushIcon, PlusIcon, RestartIcon } from "@components/Icons";
 import { Link } from "@components/Link";
 import { QuickAction, QuickActionCard } from "@components/settings/QuickAction";
-import { openPluginModal } from "@components/settings/tabs/plugins/PluginModal";
 import { UserThemeHeader } from "@main/themes";
-import ClientThemePlugin from "@plugins/clientTheme";
 import { classNameFactory } from "@utils/css";
 import { findLazy } from "@webpack";
 import { Forms, useEffect, useRef, useState } from "@webpack/common";
@@ -56,7 +53,7 @@ async function onFileUpload(e: SyntheticEvent<HTMLInputElement>) {
         return new Promise<void>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
-                VencordNative.themes.uploadTheme(name, reader.result as string)
+                RevcordNative.themes.uploadTheme(name, reader.result as string)
                     .then(resolve)
                     .catch(reject);
             };
@@ -79,7 +76,7 @@ export function LocalThemesTab() {
     }, []);
 
     async function refreshLocalThemes() {
-        const themes = await VencordNative.themes.getThemesList();
+        const themes = await RevcordNative.themes.getThemesList();
         setUserThemes(themes);
     }
 
@@ -128,7 +125,7 @@ export function LocalThemesTab() {
                             ) : (
                                 <QuickAction
                                     text="Open Themes Folder"
-                                    action={() => VencordNative.themes.openFolder()}
+                                    action={() => RevcordNative.themes.openFolder()}
                                     Icon={FolderIcon}
                                 />
                             )}
@@ -139,17 +136,9 @@ export function LocalThemesTab() {
                         />
                         <QuickAction
                             text="Edit QuickCSS"
-                            action={() => VencordNative.quickCss.openEditor()}
+                            action={() => RevcordNative.quickCss.openEditor()}
                             Icon={PaintbrushIcon}
                         />
-
-                        {isPluginEnabled(ClientThemePlugin.name) && (
-                            <QuickAction
-                                text="Edit ClientTheme"
-                                action={() => openPluginModal(ClientThemePlugin)}
-                                Icon={PencilIcon}
-                            />
-                        )}
                     </>
                 </QuickActionCard>
 
@@ -161,7 +150,7 @@ export function LocalThemesTab() {
                             onChange={enabled => onLocalThemeChange(theme.fileName, enabled)}
                             onDelete={async () => {
                                 onLocalThemeChange(theme.fileName, false);
-                                await VencordNative.themes.deleteTheme(theme.fileName);
+                                await RevcordNative.themes.deleteTheme(theme.fileName);
                                 refreshLocalThemes();
                             }}
                             theme={theme}

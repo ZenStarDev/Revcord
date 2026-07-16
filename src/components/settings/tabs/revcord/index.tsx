@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * Revcord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -130,7 +130,7 @@ function Switches() {
     });
 }
 
-function VencordSettings() {
+function RevcordSettings() {
     const donateImage = useMemo(() =>
         Math.random() > 0.5 ? DEFAULT_DONATE_IMAGE : SHIGGY_DONATE_IMAGE,
         []
@@ -156,7 +156,7 @@ function VencordSettings() {
                 : (
                     <SpecialCard
                         title="Support the Project"
-                        description="Please consider supporting the development of Vencord by donating!"
+                        description="Please consider supporting the development of Revcord by donating!"
                         cardImage={donateImage}
                         backgroundImage={DONOR_BACKGROUND_IMAGE}
                         backgroundColor="#c3a3ce"
@@ -170,7 +170,7 @@ function VencordSettings() {
                 <SpecialCard
                     title="Contributions"
                     subtitle="Thank you for contributing!"
-                    description="Since you've contributed to Vencord you now have a cool new badge!"
+                    description="Since you've contributed to Revcord you now have a cool new badge!"
                     cardImage={COZY_CONTRIB_IMAGE}
                     backgroundImage={CONTRIB_BACKGROUND_IMAGE}
                     backgroundColor="#EDCC87"
@@ -191,7 +191,7 @@ function VencordSettings() {
                     <QuickAction
                         Icon={PaintbrushIcon}
                         text="Edit QuickCSS"
-                        action={() => VencordNative.quickCss.openEditor()}
+                        action={() => RevcordNative.quickCss.openEditor()}
                     />
                     {!IS_WEB && (
                         <>
@@ -203,14 +203,14 @@ function VencordSettings() {
                             <QuickAction
                                 Icon={FolderIcon}
                                 text="Open Settings Folder"
-                                action={() => VencordNative.settings.openFolder()}
+                                action={() => RevcordNative.settings.openFolder()}
                             />
                         </>
                     )}
                     <QuickAction
                         Icon={GithubIcon}
                         text="View Source Code"
-                        action={() => VencordNative.native.openExternal("https://github.com/" + gitRemote)}
+                        action={() => RevcordNative.native.openExternal("https://github.com/" + gitRemote)}
                     />
                 </QuickActionCard>
             </section>
@@ -238,4 +238,4 @@ function VencordSettings() {
     );
 }
 
-export default wrapTab(VencordSettings, "Vencord Settings");
+export default wrapTab(RevcordSettings, "Revcord Settings");

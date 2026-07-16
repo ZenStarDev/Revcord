@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * Revcord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@ import { addProfileBadge, removeProfileBadge } from "@api/Badges";
 import { addChatBarButton, removeChatBarButton } from "@api/ChatButtons";
 import { registerCommand, unregisterCommand } from "@api/Commands";
 import { addContextMenuPatch, removeContextMenuPatch } from "@api/ContextMenu";
+import { EventBus } from "@api/EventBus";
 import { addMemberListDecorator, removeMemberListDecorator } from "@api/MemberListDecorators";
 import { addMessageAccessory, removeMessageAccessory } from "@api/MessageAccessories";
 import { addMessageDecoration, removeMessageDecoration } from "@api/MessageDecorations";
@@ -28,11 +29,11 @@ import { addMessagePopoverButton, removeMessagePopoverButton } from "@api/Messag
 import { Settings, SettingsStore } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { traceFunction } from "@debug/Tracer";
+import { FluxEvents } from "@revcord/discord-types";
 import { Logger } from "@utils/Logger";
 import { onlyOnce } from "@utils/onlyOnce";
 import { canonicalizeFind, canonicalizeReplacement } from "@utils/patches";
 import { DefinedSettings, Patch, Plugin, PluginDef, PluginSettingDef, ReporterTestable, StartAt } from "@utils/types";
-import { FluxEvents } from "@vencord/discord-types";
 import { FluxDispatcher } from "@webpack/common";
 import { patches } from "@webpack/patcher";
 
@@ -74,7 +75,7 @@ export function hasAnyVisibleSettings({ settings }: Plugin) {
     return !!settings && Object.values(settings.def).some(s => !isSettingHidden(settings, s));
 }
 
-export function addPatch(newPatch: Omit<Patch, "plugin">, pluginName: string, pluginPath = `Vencord.Plugins.plugins[${JSON.stringify(pluginName)}]`) {
+export function addPatch(newPatch: Omit<Patch, "plugin">, pluginName: string, pluginPath = `Revcord.Plugins.plugins[${JSON.stringify(pluginName)}]`) {
     // TODO: this causes crashes
     if (pluginName === "Vesktop" && newPatch.find === ".STREAMING_AUTO_STREAMER_MODE,") return;
 
@@ -217,11 +218,13 @@ export const startPlugin = traceFunction("startPlugin", function startPlugin(p: 
             p.start();
         } catch (e) {
             logger.error(`Failed to start ${name}\n`, e);
+            EventBus.emit("plugin:error", { name, stage: "start", error: e });
             return false;
         }
     }
 
     p.started = true;
+    EventBus.emit("plugin:start", { name });
 
     if (commands?.length) {
         logger.debug("Registering commands of plugin", name);
@@ -230,6 +233,7 @@ export const startPlugin = traceFunction("startPlugin", function startPlugin(p: 
                 registerCommand(cmd, name);
             } catch (e) {
                 logger.error(`Failed to register command ${cmd.name}\n`, e);
+                EventBus.emit("plugin:error", { name, stage: "start", error: e });
                 return false;
             }
         }
@@ -280,11 +284,13 @@ export const stopPlugin = traceFunction("stopPlugin", function stopPlugin(p: Plu
             p.stop();
         } catch (e) {
             logger.error(`Failed to stop ${name}\n`, e);
+            EventBus.emit("plugin:error", { name, stage: "stop", error: e });
             return false;
         }
     }
 
     p.started = false;
+    EventBus.emit("plugin:stop", { name });
 
     if (commands?.length) {
         logger.debug("Unregistering commands of plugin", name);
@@ -293,6 +299,7 @@ export const stopPlugin = traceFunction("stopPlugin", function stopPlugin(p: Plu
                 unregisterCommand(cmd.name);
             } catch (e) {
                 logger.error(`Failed to unregister command ${cmd.name}\n`, e);
+                EventBus.emit("plugin:error", { name, stage: "stop", error: e });
                 return false;
             }
         }

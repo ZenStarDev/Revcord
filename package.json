@@ -1,15 +1,15 @@
 {
-    "name": "vencord",
+    "name": "revcord",
     "private": "true",
     "version": "1.14.16",
     "description": "The cutest Discord client mod",
-    "homepage": "https://github.com/Vendicated/Vencord#readme",
+    "homepage": "https://github.com/Vendicated/Revcord#readme",
     "bugs": {
-        "url": "https://github.com/Vendicated/Vencord/issues"
+        "url": "https://github.com/Vendicated/Revcord/issues"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Vendicated/Vencord.git"
+        "url": "git+https://github.com/Vendicated/Revcord.git"
     },
     "license": "GPL-3.0-or-later",
     "author": "Vendicated",
@@ -24,8 +24,8 @@
         "dev": "pnpm watch",
         "watchWeb": "pnpm buildWeb --watch",
         "generatePluginJson": "tsx scripts/generatePluginList.ts",
-        "generateTypes": "tspc --emitDeclarationOnly --declaration --outDir packages/vencord-types --allowJs false",
-        "inject": "node scripts/runInstaller.mjs -- --install",
+        "generateTypes": "tspc --emitDeclarationOnly --declaration --outDir packages/revcord-types --allowJs false",
+        "inject": "node scripts/runInstaller.mjs",
         "uninject": "node scripts/runInstaller.mjs -- --uninstall",
         "lint": "eslint",
         "lint-styles": "stylelint \"src/**/*.css\" --ignore-pattern src/userplugins",
@@ -36,13 +36,9 @@
     },
     "dependencies": {
         "@intrnl/xxhash64": "^0.1.2",
-        "@vap/core": "0.0.12",
-        "@vap/shiki": "0.10.5",
         "fflate": "^0.8.3",
-        "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3",
         "monaco-editor": "^0.55.1",
-        "nanoid": "^5.1.16",
-        "virtual-merge": "^1.0.1"
+        "nanoid": "^5.1.16"
     },
     "devDependencies": {
         "@stylistic/eslint-plugin": "^5.10.0",
@@ -52,7 +48,7 @@
         "@types/react": "19.1.0",
         "@types/react-dom": "19.1.0",
         "@types/yazl": "^3.3.1",
-        "@vencord/discord-types": "link:packages/discord-types",
+        "@revcord/discord-types": "link:packages/discord-types",
         "diff": "^9.0.0",
         "esbuild": "^0.28.1",
         "eslint": "10.6.0",

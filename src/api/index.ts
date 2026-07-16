@@ -1,5 +1,5 @@
 /*
- * Vencord, a modification for Discord's desktop app
+ * Revcord, a modification for Discord's desktop app
  * Copyright (c) 2022 Vendicated and contributors
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,9 +18,15 @@
 
 import * as $Badges from "./Badges";
 import * as $ChatButtons from "./ChatButtons";
+import * as $CommandRegistry from "./CommandRegistry";
 import * as $Commands from "./Commands";
 import * as $ContextMenu from "./ContextMenu";
 import * as $DataStore from "./DataStore";
+import * as $EventBus from "./EventBus";
+import * as $HotReload from "./HotReload";
+import * as $i18n from "./i18n";
+import * as $Lifecycle from "./Lifecycle";
+import * as $Loggers from "./Loggers";
 import * as $MemberListDecorators from "./MemberListDecorators";
 import * as $MessageAccessories from "./MessageAccessories";
 import * as $MessageDecorations from "./MessageDecorations";
@@ -29,6 +35,7 @@ import * as $MessagePopover from "./MessagePopover";
 import * as $MessageUpdater from "./MessageUpdater";
 import * as $Notices from "./Notices";
 import * as $Notifications from "./Notifications";
+import * as $PluginSDK from "./PluginSDK";
 export * as PluginManager from "./PluginManager";
 import * as $ServerList from "./ServerList";
 import * as $Settings from "./Settings";
@@ -129,3 +136,40 @@ export const UserSettings = $UserSettings;
  * Don't use this
  */
 export const Themes = $Themes;
+
+/**
+ * A crash-safe, typed publish/subscribe bus. Plugins should communicate through
+ * this instead of reaching into each other's internals.
+ */
+export const EventBus = $EventBus;
+
+/**
+ * Central registry of all loggers, with optional in-memory capture for the dev overlay.
+ */
+export const Loggers = $Loggers;
+
+/**
+ * Discord-independent command registry, powering the Command Palette.
+ */
+export const CommandRegistry = $CommandRegistry;
+
+/**
+ * Declare code that can re-initialise without a full client restart.
+ */
+export const HotReload = $HotReload;
+
+/**
+ * Lightweight i18n with safe fallback.
+ */
+export const i18n = $i18n;
+
+/**
+ * Register global start/stop hooks without being a full plugin.
+ */
+export const Lifecycle = $Lifecycle;
+
+/**
+ * Supreme Plugin SDK — chainable builders that make writing Revcord plugins
+ * dramatically faster than raw definePlugin.
+ */
+export const PluginSDK = $PluginSDK;

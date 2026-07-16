@@ -20,7 +20,7 @@ on:
 
 jobs:
     TestPlugins:
-        if: github.repository == 'Vendicated/Vencord'
+        if: github.repository == 'Vendicated/Revcord'
         runs-on: ubuntu-latest
 
         steps:
@@ -44,7 +44,7 @@ jobs:
               run: |
                   pnpm install --frozen-lockfile
 
-            - name: Build Vencord Reporter Version
+            - name: Build Revcord Reporter Version
               run: pnpm buildReporter
 
             - name: Run Reporter
