@@ -46,7 +46,7 @@ if (isWindows && !isElevated()) {
     process.exit(0);
 }
 
-const BASE_URL = "https://github.com/Revcord/Installer/releases/latest/download/";
+const BASE_URL = "https://github.com/ZenStarDev/Revcord/releases/latest/download/";
 const INSTALLER_PATH_DARWIN = "RevcordInstaller.app/Contents/MacOS/RevcordInstaller";
 
 const BASE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
